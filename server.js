@@ -10,7 +10,7 @@ const {schedulePosts}  = require("./controller/INFB/allposting")
 
 
 // Enable CORS
-app.use(cors());
+app.use(cors());   
 
 // middleware
 app.use(express.json());
