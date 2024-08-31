@@ -97,7 +97,7 @@ const postToImageFeedFacebook = async (
 };
 
 // Function to post image feed to Instagram
-const postToImageFeedInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
+const postToImageFeedInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL , message) => {
   console.log("Insta post");
   try {
     const mediaUrl = `https://graph.facebook.com/v19.0/${Inst_ID}/media`;
@@ -107,7 +107,7 @@ const postToImageFeedInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
       params: {
         image_url: PHOTO_URL,
         access_token: ACCESS_TOKEN,
-        caption: "Instagram Story",
+        caption: message,
       },
     });
 
