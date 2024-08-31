@@ -107,6 +107,7 @@ const postToImageFeedInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
       params: {
         image_url: PHOTO_URL,
         access_token: ACCESS_TOKEN,
+        caption: "Instagram Story",
       },
     });
 
@@ -138,13 +139,13 @@ const schedulePosts = async () => {
   try {
     
     const posts = await Content.find();
-  console.log("posts",posts) 
+  // console.log("posts",posts) 
  
     
     posts.forEach(
       ({
         Fb_ID,  
-        message,
+        message,  
         Inst_ID,
         ACCESS_TOKEN,
         PHOTO_URL,
@@ -155,7 +156,7 @@ const schedulePosts = async () => {
         if (delay > 0) {
           setTimeout(() => {
             if (platforms.includes("facebook-story-image")) {
-              console.log("FB story");
+              console.log("FB story"); 
               postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
             }
             if (platforms.includes("facebook-Feed-image")) {
@@ -163,12 +164,12 @@ const schedulePosts = async () => {
               postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
             }
             if (platforms.includes("instagram-story-image")) {
-              console.log("Insta story");
+              console.log("Insta story"); 
               postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
+            } 
             if (platforms.includes("instagram-Feed-image")) {
               console.log("Insta post");
-              postToImageFeedInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+              postToImageFeedInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL,message);
             }
           }, delay);
         }
@@ -181,3 +182,6 @@ const schedulePosts = async () => {
 
 // schedulePosts();
 module.exports= {schedulePosts}
+
+
+

@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 connectDb()
 
-schedulePosts()
+schedulePosts()  
 // routes
 app.use("/api", Story);
 // Start server
