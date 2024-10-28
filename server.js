@@ -1,9 +1,13 @@
 const express = require("express");
 const app = express();
-// const {schedulePost} = require("./controller/Story/story");
+const dotenv = require("dotenv");
 const Story = require("./routes/facebook/stroy")
 const connectDb = require("./config/database");
 const cors = require('cors');
+const AI = require("./routes/AI");
+
+dotenv.config();
+
 const {schedulePosts}  = require("./controller/INFB/allposting")
 
 
@@ -18,7 +22,7 @@ connectDb()
 
 schedulePosts()  
 // routes
-app.use("/api", Story);
+app.use("/api", Story,AI);
 // Start server
 app.listen(7000, () => {
     console.log(`Server started on port 7000`);
