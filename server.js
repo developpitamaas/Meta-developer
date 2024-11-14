@@ -24,6 +24,6 @@ schedulePosts()
 // routes
 app.use("/api", Story,AI);
 // Start server
-app.listen(7004, () => {
+app.listen(7005, () => {
     console.log(`Server started on port 7002`);
 })
