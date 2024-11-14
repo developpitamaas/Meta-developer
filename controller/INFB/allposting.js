@@ -190,7 +190,7 @@ const postToVideoStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
       {
         params: {
           media_type: "STORIES",
-          PHOTO_URL: PHOTO_URL,
+          video_url: PHOTO_URL,
           access_token: ACCESS_TOKEN,
         },
       }
