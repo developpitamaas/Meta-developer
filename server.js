@@ -11,6 +11,9 @@ dotenv.config();
 const {schedulePosts}  = require("./controller/INFB/allposting")
 
 
+app.get("/", (req, res) => {
+    res.send("Hello vaibhav Meta Developer is working");
+})
 
 
 // Enable CORS
