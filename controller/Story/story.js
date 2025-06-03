@@ -1,15 +1,16 @@
 const Story = require("../../model/facebook/story");
 const { schedulePosts } = require("../INFB/allposting");
 
-const postStory = async (req, res) => {
-  try {
-    const response = await Story.create(req.body);
-    schedulePosts();
-    res.status(201).json(response);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+const postStory = async (req,res) => {
+    try {
+        const response = await Story.create(req.body);
+schedulePosts()
+
+        res.status(201).json(response);
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+}
 
 const getStory = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ const getStory = async (req, res) => {
     
     let stories = await Story.find();
     
-    
+
     stories = stories.map(story => {
       const isoTime = new Date(story.unixtime * 1000).toISOString();
       return {
