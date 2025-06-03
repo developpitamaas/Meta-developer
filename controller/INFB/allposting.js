@@ -4,7 +4,7 @@ const Content = require("../../model/facebook/story");
 // Function to post image story to Facebook
 const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("stated");
+    console.log("1-stated image story on facebook");
     const uploadResponse = await axios.post(
       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
       {
@@ -14,7 +14,7 @@ const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("First step done", uploadResponse);
+    console.log("2- image story on facebook");
     const photoId = uploadResponse.data.id;
     const data = await axios.post(
       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
@@ -24,7 +24,10 @@ const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Facebook story posted successfully!", data);
+    console.log(
+      "3 (Final)- Facebook story posted successfully! this is url - ",
+      PHOTO_URL
+    );
   } catch (error) {
     console.error(
       "Error posting story to Facebook:",
@@ -37,14 +40,14 @@ const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
 
 const postVideoStoryToFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("Starting video story upload to Facebook");
+    console.log("1- stated video story on facebook");
 
     // Step 1: Start the upload process
     const startResponse = await axios.post(
       `https://graph.facebook.com/${Fb_ID}/video_stories?upload_phase=start&access_token=${ACCESS_TOKEN}`
     );
     const { video_id, upload_url } = startResponse.data;
-    console.log("Video story upload started:", video_id, upload_url);
+    console.log("2- video story on facebook:");
 
     // Wait for 30 seconds after Step 1
     await new Promise((resolve) => setTimeout(resolve, 30000));
@@ -59,7 +62,7 @@ const postVideoStoryToFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
         file_url: PHOTO_URL,
       },
     });
-    console.log("Video file uploaded:", uploadResponse.data);
+    console.log("3-  video story on facebook:");
 
     // Wait for 30 seconds after Step 2
     await new Promise((resolve) => setTimeout(resolve, 30000));
@@ -69,7 +72,7 @@ const postVideoStoryToFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       `https://graph.facebook.com/${Fb_ID}/video_stories?upload_phase=finish&video_id=${video_id}&access_token=${ACCESS_TOKEN}`
     );
 
-    console.log("Video story upload finished:", finishResponse.data);
+    console.log("4 (Final)- Video story upload finished:", PHOTO_URL);
   } catch (error) {
     console.error(
       "Error posting video story to Facebook:",
@@ -80,7 +83,7 @@ const postVideoStoryToFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
 
 const postToFacebookReels = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("Starting video upload for Facebook Reels");
+    console.log("1- stated video Reel on facebook");
 
     // Step 1: Start the upload session
     const startResponse = await axios.post(
@@ -91,7 +94,7 @@ const postToFacebookReels = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Upload session started:", startResponse.data);
+    console.log("2- video Reel on facebook:");
     const uploadSessionId = startResponse.data.upload_session_id;
 
     // Step 2: Transfer the video file
@@ -105,7 +108,7 @@ const postToFacebookReels = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Video file transferred:", transferResponse.data);
+    console.log("3- video Reel on facebook:");
 
     // Step 3: Finish the upload
     const finishResponse = await axios.post(
@@ -117,7 +120,7 @@ const postToFacebookReels = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Video upload finished:", finishResponse.data);
+    console.log("4- video Reel on facebook:");
 
     // Step 4: Here you can try to apply a category, title, description, etc., that targets Reels
     // For example, we can just post it to the page and hope Facebook auto-categorizes it
@@ -131,7 +134,7 @@ const postToFacebookReels = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Facebook video posted as Reel:", data);
+    console.log("5 (Final)- video Reel posted on facebook:", PHOTO_URL);
   } catch (error) {
     console.error(
       "Error posting video to Facebook Reels:",
@@ -156,7 +159,7 @@ const postToImageStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     });
 
     const creationId = mediaResponse.data.id;
-    console.log(`Step -1 Instagram creation : ${creationId}`);
+    console.log(`1 - Instagram image story creation : ${creationId}`);
 
     const mediaUrlforPost = `https://graph.facebook.com/v19.0/${Inst_ID}/media_publish`;
     // Post the story to Instagram
@@ -168,7 +171,7 @@ const postToImageStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     });
 
     const instaResponseId = storyResponse.data.id;
-    console.log(`2nd step - Instagram story response ID: ${instaResponseId}`);
+    console.log(`2 (Final)- Instagram image response image: ${PHOTO_URL}`);
   } catch (error) {
     console.error(
       "Error posting story to Instagram:",
@@ -181,7 +184,7 @@ const postToImageStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
 
 const postToVideoStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("Starting video story upload to Instagram");
+    console.log("1- Starting video story upload to Instagram");
 
     // Step 1: Send video URL to initiate the story upload
     const mediaResponse = await axios.post(
@@ -197,7 +200,7 @@ const postToVideoStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     );
 
     const creationId = mediaResponse.data.id;
-    console.log("Video story upload started. Creation ID:", creationId);
+    console.log("2- Video story upload started. Creation ID:", creationId);
 
     // Wait for 10 seconds before calling Step 2 API
     await new Promise((resolve) => setTimeout(resolve, 90000));
@@ -215,8 +218,8 @@ const postToVideoStoryInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     );
 
     console.log(
-      "Instagram video story posted successfully!",
-      publishResponse.data
+      "3 (Final)- Instagram video story posted successfully!",
+      PHOTO_URL
     );
   } catch (error) {
     console.error(
@@ -233,7 +236,7 @@ const postToImageFeedFacebook = async (
   PHOTO_URL,
   message
 ) => {
-  console.log("Post image on feed");
+  console.log(" 1- Post image on feed started");
   try {
     const response = await axios.post(
       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
@@ -243,7 +246,7 @@ const postToImageFeedFacebook = async (
         message: message,
       }
     );
-    console.log("First step done");
+    console.log("2- Post image on feed completed",PHOTO_URL);
   } catch (error) {
     console.error(
       "Error posting story to Facebook:",
@@ -259,7 +262,6 @@ const postToImageFeedInstagram = async (
   PHOTO_URL,
   message
 ) => {
-  console.log("Insta post");
   try {
     const mediaUrl = `https://graph.facebook.com/v19.0/${Inst_ID}/media`;
 
@@ -273,7 +275,7 @@ const postToImageFeedInstagram = async (
     });
 
     const creationId = mediaResponse.data.id;
-    console.log(`Step -1 Instagram creation : ${creationId}`);
+    console.log(`-1 Instagram creation : ${creationId}`);
 
     const mediaUrlforPost = `https://graph.facebook.com/v19.0/${Inst_ID}/media_publish`;
     // Post the story to Instagram
@@ -342,7 +344,6 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
 
 // Function to schedule the posts
 const schedulePosts = async () => {
-  console.log("stated");
   try {
     const posts = await Content.find();
     posts.forEach(
@@ -360,29 +361,29 @@ const schedulePosts = async () => {
           setTimeout(() => {
             // Facebook
             if (platforms.includes("facebook-story-image")) {
-              console.log("FB story");
+              console.log("Task -  FB story",PHOTO_URL);
               postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
             }
             if (platforms.includes("facebook-Feed-image")) {
-              console.log("FB post");
+              console.log(" Task - FB post",PHOTO_URL);
               postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
             }
             if (platforms.includes("facebook-Feed-video")) {
-              console.log("FB vidoe post");
+              console.log("Task  - FB vidoe post");
               postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
             }
             if (platforms.includes("facebook-story-video")) {
-              console.log("Posting Facebook video story");
+              console.log("Task  - Posting Facebook video story");
               postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
             }
 
             // Instagram
             if (platforms.includes("instagram-story-image")) {
-              console.log("Insta story");
+              console.log("Task  - Insta story");
               postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
             }
             if (platforms.includes("instagram-Feed-image")) {
-              console.log("Insta post");
+              console.log(" Task - Insta post");
               postToImageFeedInstagram(
                 Inst_ID,
                 ACCESS_TOKEN,

@@ -19,6 +19,7 @@ const getStory = async (req, res) => {
     
     let stories = await Story.find();
     
+    
     stories = stories.map(story => {
       const isoTime = new Date(story.unixtime * 1000).toISOString();
       return {
