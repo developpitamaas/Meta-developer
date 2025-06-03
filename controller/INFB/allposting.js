@@ -1,10 +1,10 @@
 const axios = require("axios");
-const Content = require("../../model/facebook/story");
+const Content = require("../../model/facebook/story"); 
 
 // Function to post image story to Facebook
 const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("stated");
+    console.log("stated---");
     const uploadResponse = await axios.post(
       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
       {
