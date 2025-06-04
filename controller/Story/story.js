@@ -12,34 +12,34 @@ schedulePosts()
     }
 }
 
-// const getStory = async (req, res) => {
-//   try {
-//     const currentTime = Math.floor(Date.now() / 1000);
+const getStory = async (req, res) => {
+  try {
+    const currentTime = Math.floor(Date.now() / 1000);
     
-//     const filter = req.query.filter;
+    const filter = req.query.filter;
     
-//     let stories = await Story.find();
+    let stories = await Story.find();
     
 
-//     stories = stories.map(story => {
-//       const isoTime = new Date(story.unixtime * 1000).toISOString();
-//       return {
-//         ...story._doc,
-//         isoTime: isoTime,
-//         isUpcoming: parseInt(story.unixtime) > currentTime
-//       };
-//     });
+    stories = stories.map(story => {
+      const isoTime = new Date(story.unixtime * 1000).toISOString();
+      return {
+        ...story._doc,
+        isoTime: isoTime,
+        isUpcoming: parseInt(story.unixtime) > currentTime
+      };
+    });
     
-//     if (filter === 'upcoming') {
-//       stories = stories.filter(story => story.isUpcoming);
-//     } else if (filter === 'past') {
-//       stories = stories.filter(story => !story.isUpcoming);
-//     }
+    if (filter === 'upcoming') {
+      stories = stories.filter(story => story.isUpcoming);
+    } else if (filter === 'past') {
+      stories = stories.filter(story => !story.isUpcoming);
+    }
     
-//     res.status(200).json(stories);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
+    res.status(200).json(stories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-module.exports = { postStory  };
+module.exports = { postStory , getStory  };
