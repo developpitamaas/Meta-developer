@@ -340,75 +340,78 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
   }
 };
 
-// Function to schedule the posts
-// const schedulePosts = async () => {
-//   console.log("stated");
-//   try {
-//     const posts = await Content.find();
-//     posts.forEach(
-//       ({
-//         Fb_ID,
-//         message,
-//         Inst_ID,
-//         ACCESS_TOKEN,
-//         PHOTO_URL,
-//         unixtime,
-//         for: platforms,
-//       }) => {
-//         const delay = unixtime * 1000 - Date.now();
-//         if (delay > 0) {
-//           setTimeout(() => {
-//             // Facebook
-            // if (platforms.includes("facebook-story-image")) {
-            //   console.log("FB story");
-            //   postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
-            // if (platforms.includes("facebook-Feed-image")) {
-            //   console.log("FB post");
-            //   postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
-            // }
-            // if (platforms.includes("facebook-Feed-video")) {
-            //   console.log("FB vidoe post");
-            //   postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
-            // if (platforms.includes("facebook-story-video")) {
-            //   console.log("Posting Facebook video story");
-            //   postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
 
-            // // Instagram
-            // if (platforms.includes("instagram-story-image")) {
-            //   console.log("Insta story");
-            //   postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
-            // if (platforms.includes("instagram-Feed-image")) {
-            //   console.log("Insta post");
-            //   postToImageFeedInstagram(
-            //     Inst_ID,
-            //     ACCESS_TOKEN,
-            //     PHOTO_URL,
-            //     message
-            //   );
-            // }
-            // if (platforms.includes("instagram-story-video")) {
-            //   postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
-            // if (platforms.includes("instagram-Feed-video")) {
-            //   postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            // }
-//           }, delay);
-//         }
+// async function schedulePosts() {
+//   const data = await Content.find();
+//   console.log(data)
+//   data.forEach(
+//     ({
+//       Fb_ID,
+//       message,   
+//       Inst_ID,
+//       ACCESS_TOKEN,
+//       PHOTO_URL, 
+//       unixtime, 
+//       for: platforms,
+//     }) => {
+//       const delay = unixtime * 1000 - Date.now(); 
+//       if (delay > 0) {
+//         setTimeout(() => {
+//           if (platforms.includes("facebook-story-image")) {
+//               console.log("FB story");
+//               postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+//             if (platforms.includes("facebook-Feed-image")) {
+//               console.log("FB post");
+//               postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
+//             }
+//             if (platforms.includes("facebook-Feed-video")) {
+//               console.log("FB vidoe post");
+//               postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+//             if (platforms.includes("facebook-story-video")) {
+//               console.log("Posting Facebook video story");
+//               postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+
+//             // Instagram
+//             if (platforms.includes("instagram-story-image")) {
+//               console.log("Insta story");
+//               postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+//             if (platforms.includes("instagram-Feed-image")) {
+//               console.log("Insta post");
+//               postToImageFeedInstagram(
+//                 Inst_ID,
+//                 ACCESS_TOKEN,
+//                 PHOTO_URL,
+//                 message
+//               );
+//             }
+//             if (platforms.includes("instagram-story-video")) {
+//               postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+//             if (platforms.includes("instagram-Feed-video")) {
+//               postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+//             }
+//         }, delay);
 //       }
-//     );
-//   } catch (error) {
-//     console.error("Error fetching posts from MongoDB:", error);
-//   }
-// };
+//     }
+//   );
+// }
+// Keep track of active timers
+const activeTimers = new Map();
+
 async function schedulePosts() {
+  // Clear any existing timers
+  clearAllScheduledPosts();
+
   const data = await Content.find();
-  console.log(data)
+  console.log(data);
+
   data.forEach(
     ({
+      _id,
       Fb_ID,
       message,   
       Inst_ID,
@@ -416,72 +419,70 @@ async function schedulePosts() {
       PHOTO_URL, 
       unixtime, 
       for: platforms,
+      isUpcoming
     }) => {
+      // Skip if post is not upcoming
+      if (isUpcoming === false) return;
+
       const delay = unixtime * 1000 - Date.now(); 
       if (delay > 0) {
-        setTimeout(() => {
-          // if (platforms.includes("facebook-story-image")) {
-          //   console.log("fb story");
-          //   postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-          // }
-          // if (platforms.includes("facebook-Feed-image")) {
-          //   console.log("fb post");
-
-          //   postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
-          // }
-          // if (platforms.includes("instagram-story-image")) {
-          //   console.log("insta story");
-
-          //   postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-          // }
-          // if (platforms.includes("instagram-Feed-image")) {
-          //   console.log("insta post");
-
-          //   postToImageFeedInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-          // }
+        const timerId = setTimeout(() => {
           if (platforms.includes("facebook-story-image")) {
-              console.log("FB story");
-              postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
-            if (platforms.includes("facebook-Feed-image")) {
-              console.log("FB post");
-              postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
-            }
-            if (platforms.includes("facebook-Feed-video")) {
-              console.log("FB vidoe post");
-              postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
-            if (platforms.includes("facebook-story-video")) {
-              console.log("Posting Facebook video story");
-              postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
+            console.log("FB story");
+            postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
+          if (platforms.includes("facebook-Feed-image")) {
+            console.log("FB post");
+            postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
+          }
+          if (platforms.includes("facebook-Feed-video")) {
+            console.log("FB video post");
+            postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
+          if (platforms.includes("facebook-story-video")) {
+            console.log("Posting Facebook video story");
+            postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
 
-            // Instagram
-            if (platforms.includes("instagram-story-image")) {
-              console.log("Insta story");
-              postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
-            if (platforms.includes("instagram-Feed-image")) {
-              console.log("Insta post");
-              postToImageFeedInstagram(
-                Inst_ID,
-                ACCESS_TOKEN,
-                PHOTO_URL,
-                message
-              );
-            }
-            if (platforms.includes("instagram-story-video")) {
-              postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
-            if (platforms.includes("instagram-Feed-video")) {
-              postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-            }
+          // Instagram
+          if (platforms.includes("instagram-story-image")) {
+            console.log("Insta story");
+            postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
+          if (platforms.includes("instagram-Feed-image")) {
+            console.log("Insta post");
+            postToImageFeedInstagram(
+              Inst_ID,
+              ACCESS_TOKEN,
+              PHOTO_URL,
+              message
+            );
+          }
+          if (platforms.includes("instagram-story-video")) {
+            postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
+          if (platforms.includes("instagram-Feed-video")) {
+            postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+          }
+
+          // Remove the timer from activeTimers after execution
+          activeTimers.delete(_id);
         }, delay);
+
+        // Store the timer with the post _id as key
+        activeTimers.set(_id, timerId);
       }
     }
   );
 }
 
+function clearAllScheduledPosts() {
+  // Clear all active timers
+  for (const [_, timerId] of activeTimers) {
+    clearTimeout(timerId);
+  }
+  activeTimers.clear();
+}
 // schedulePosts();
 module.exports = { schedulePosts };
 
