@@ -407,7 +407,6 @@ async function schedulePosts() {
   clearAllScheduledPosts();
 
   const data = await Content.find();
-  console.log(data);
 
   data.forEach(
     ({
