@@ -845,67 +845,6 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     );
   }
 };
-
-
-// async function schedulePosts() {
-//   const data = await Content.find();
-//   console.log(data)
-//   data.forEach(
-//     ({
-//       Fb_ID,
-//       message,   
-//       Inst_ID,
-//       ACCESS_TOKEN,
-//       PHOTO_URL, 
-//       unixtime, 
-//       for: platforms,
-//     }) => {
-//       const delay = unixtime * 1000 - Date.now(); 
-//       if (delay > 0) {
-//         setTimeout(() => {
-//           if (platforms.includes("facebook-story-image")) {
-//               console.log("FB story");
-//               postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-//             if (platforms.includes("facebook-Feed-image")) {
-//               console.log("FB post");
-//               postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
-//             }
-//             if (platforms.includes("facebook-Feed-video")) {
-//               console.log("FB vidoe post");
-//               postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-//             if (platforms.includes("facebook-story-video")) {
-//               console.log("Posting Facebook video story");
-//               postVideoStoryToFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-
-//             // Instagram
-//             if (platforms.includes("instagram-story-image")) {
-//               console.log("Insta story");
-//               postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-//             if (platforms.includes("instagram-Feed-image")) {
-//               console.log("Insta post");
-//               postToImageFeedInstagram(
-//                 Inst_ID,
-//                 ACCESS_TOKEN,
-//                 PHOTO_URL,
-//                 message
-//               );
-//             }
-//             if (platforms.includes("instagram-story-video")) {
-//               postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-//             if (platforms.includes("instagram-Feed-video")) {
-//               postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-//             }
-//         }, delay);
-//       }
-//     }
-//   );
-// }
-// Keep track of active timers
 const activeTimers = new Map();
 
 async function schedulePosts() {

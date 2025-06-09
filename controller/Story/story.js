@@ -103,4 +103,17 @@ const getStory = async (req, res) => {
   }
 };
 
-module.exports = { postStory, getStory };
+const  deleteStory = async (req, res) => {
+  try {
+    const deletedStory = await Story.findByIdAndDelete(req.params.id);
+    if (!deletedStory) {
+      return res.status(404).json({ message: "Story not found" });
+    }
+    res.status(200).json({ message: "Story deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting story:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { postStory, getStory , deleteStory };
