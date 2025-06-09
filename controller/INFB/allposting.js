@@ -1,39 +1,461 @@
 const axios = require("axios");
 const Content = require("../../model/facebook/story");
+const sharp = require('sharp');
+const FormData = require('form-data'); // Node.js FormData alternative
+const fs = require('fs');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Function to post image story to Facebook
-const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+const genAI = new GoogleGenerativeAI("AIzaSyC173q3386aM6I6clEXS2ED_F4eEtgcPQw");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+
+
+
+const lightenColor = (color, percent) => { 
+  return {
+    r: Math.min(255, color.r + Math.round(255 * (percent/100))),
+    g: Math.min(255, color.g + Math.round(255 * (percent/100))),
+    b: Math.min(255, color.b + Math.round(255 * (percent/100))) 
+  };
+};  
+const postSmallImageWithPadding = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
-    console.log("stated");
+    // 1. Download image
+    const response = await axios.get(PHOTO_URL, { responseType: 'arraybuffer' });
+    const imageBuffer = Buffer.from(response.data); 
+ 
+    // Create version without padding for color analysis
+    const analysisImage = await sharp(imageBuffer)
+      .resize(800, 800, { fit: 'inside' }) // Optimal size for analysis
+      .toBuffer();
+    
+    let colors = {
+      color1: { r: 100, g: 200, b: 255 }, // Default blue
+      color2: { r: 200, g: 255, b: 100 }  // Default gree['n
+    };  
+    
+    try {
+      const image = { 
+        inlineData: { 
+          data: analysisImage.toString("base64"),
+          mimeType: 'image/jpeg', 
+        }, 
+      };
+      
+      // Neutral prompt without color bias
+      const prompt = `Analyze the actual visual content of this image and identify the TWO most dominant RGB colors. 
+                      Consider only the main subject and foreground elements. 
+                      Ignore any borders, backgrounds, padding, or potential artifacts. 
+                      Return ONLY valid JSON in this exact format: 
+                      {
+                        "color1": {"r": number, "g": number, "b": number},
+                        "color2": {"r": number, "g": number, "b": number}
+                      }
+                      Do not include any additional text or explanations.`;
+      
+      const result = await model.generateContent([prompt, image]);
+      const responseText = result.response.text().trim();
+      
+      // Clean response and parse JSON
+      const jsonStart = responseText.indexOf('{');
+      const jsonEnd = responseText.lastIndexOf('}') + 1;
+      const jsonString = responseText.substring(jsonStart, jsonEnd);
+      
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        const parsed = JSON.parse(jsonString);
+        if (parsed.color1 && parsed.color2) {
+          colors = parsed;
+          
+          // Lighten colors (30% lighter)
+          colors.color1 = lightenColor(colors.color1, 30);
+          colors.color2 = lightenColor(colors.color2, 30);
+          
+          console.log("Detected colors:", colors);
+        }
+      }
+    } catch (aiError) {
+      console.error("AI Color Analysis Error:", aiError.message);
+      // Neutral fallback colors (blue/green gradient)
+      colors = {
+        color1: { r: 100, g: 200, b: 255 },
+        color2: { r: 200, g: 255, b: 100 }
+      };
+    }
+
+    // Create padded version for final composition
+    const paddedImage = await sharp(imageBuffer)
+      .resize({ 
+        width: 900,
+        height: 1600,
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent background
+      })
+      .toBuffer();
+
+    // Create gradient SVG with blur effect
+    const gradientSvg = Buffer.from(`
+      <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="blur" x="0" y="0">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="20" />
+          </filter>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="rgb(${colors.color1.r}, ${colors.color1.g}, ${colors.color1.b})"/>
+            <stop offset="100%" stop-color="rgb(${colors.color2.r}, ${colors.color2.g}, ${colors.color2.b})"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grad)" filter="url(#blur)"/>
+      </svg>
+    `);
+
+    // Create final composition
+    const finalImage = await sharp(gradientSvg)
+      .composite([{ 
+        input: paddedImage,
+        gravity: 'center',
+        blend: 'over' 
+      }])
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    // Facebook posting
+    const form = new FormData();
+    form.append('source', finalImage, { filename: 'fb-story.jpg' });
+    form.append('published', 'false');
+    form.append('access_token', ACCESS_TOKEN);
+
     const uploadResponse = await axios.post(
       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
-      {
-        url: PHOTO_URL,
-        published: false,
-        access_token: ACCESS_TOKEN,
-      }
+      form,
+      { headers: { ...form.getHeaders() } }
     );
-
-    console.log("First step done", uploadResponse);
-    const photoId = uploadResponse.data.id;
-    const data = await axios.post(
+ 
+    await axios.post(
       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
-      {
-        photo_id: photoId,
-        access_token: ACCESS_TOKEN,
-      }
+      { photo_id: uploadResponse.data.id, access_token: ACCESS_TOKEN }
     );
 
-    console.log("Facebook story posted successfully!", data);
+    console.log("Story posted with accurate color gradient!");
   } catch (error) {
-    console.error(
-      "Error posting story to Facebook:",
-      error.response ? error.response.data : error.message
-    );
+    console.error("Error:", error.response?.data || error.message);
+    throw error; // Rethrow for better error handling upstream
   }
-};
+}; 
+// const postSmallImageWithPadding = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+//   try {
+//     // 1. Download image
+//     const response = await axios.get(PHOTO_URL, { responseType: 'arraybuffer' });
+//     const imageBuffer = Buffer.from(response.data);
 
-// Function to post video story to Facebook
+//     // Create a version WITHOUT padding for color analysis
+//     const originalImage = await sharp(imageBuffer)
+//       .resize({ fit: 'inside' })
+//       .toBuffer();
+    
+//     let dominantColor = { r: 245, g: 245, b: 245 }; 
+//     try {
+//       // Use ORIGINAL image (no padding) for color analysis
+//       const image = { 
+//         inlineData: { 
+//           data: originalImage.toString("base64"),
+//           mimeType: 'image/jpeg', 
+//         },
+//       };
+      
+//       // Improved prompt with specific instructions
+//       const prompt = `Analyze the main subject in this image and identify its dominant RGB color. 
+//                       Ignore any borders, backgrounds, or padding. 
+//                       If the image has a pink subject, return pink RGB values. 
+//                       Format response ONLY as: {r: number, g: number, b: number}`;
+      
+//       const result = await model.generateContent([prompt, image]);
+//       const responseText = result.response.text().trim();
+      
+//       // Extract the color object from the response
+//       if (responseText.startsWith('{') && responseText.endsWith('}')) {
+//         dominantColor = eval(`(${responseText})`);
+        
+//         // Further lighten the color (40% lighter)
+//         dominantColor = lightenColor(dominantColor, 40);
+        
+//         console.log("Using lightened dominant color:", dominantColor);
+//       }
+//     } catch (aiError) {
+//       console.error("AI Color Analysis Error:", aiError.message);
+//       // Fallback to pink if detection fails
+//       dominantColor = { r: 255, g: 192, b: 203 }; // Light pink
+//     }
+
+//     // Create padded version for final composition (with original gray)
+//     const paddedImage = await sharp(imageBuffer)
+//       .resize({ fit: 'inside', background: { r: 40, g: 40, b: 40 } })
+//       .toBuffer();
+
+//     // Create final image with detected color background
+//     const finalImage = await sharp({
+//       create: {
+//         width: 1080, 
+//         height: 1920,
+//         channels: 4,
+//         // background: { ...dominantColor, alpha: 0.2 }
+//         background: dominantColor
+//       }
+//     })
+//     .blur(20)
+//     .composite([{ input: paddedImage, gravity: 'center' }])
+//     .jpeg()
+//     .toBuffer();
+//      // Facebook posting code
+//     const form = new FormData();
+//     form.append('source', finalImage, { filename: 'fb-story.jpg' }); 
+//     form.append('published', 'false');
+//     form.append('access_token', ACCESS_TOKEN);
+
+//     const uploadResponse = await axios.post(
+//       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
+//       form,
+//       { headers: { ...form.getHeaders() } }
+//     );
+ 
+//     await axios.post(
+//       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
+//       { photo_id: uploadResponse.data.id, access_token: ACCESS_TOKEN }
+//     );
+
+//     console.log("Story posted successfully with color-matched background!");
+
+//     // Rest of Facebook posting code remains the same...
+//     // ... (your existing FormData and axios code)
+//   } catch (error) {
+//     console.error("Error:", error.response?.data || error.message);
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const postToImageStoryFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+//   try {
+    
+//     console.log("stated");
+//     const uploadResponse = await axios.post(
+//       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
+//       {
+//         url: PHOTO_URL,
+//         published: false,
+//         access_token: ACCESS_TOKEN,
+//       }
+//     );
+
+//     console.log("First step done", uploadResponse);
+//     const photoId = uploadResponse.data.id;
+//     const data = await axios.post(
+//       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
+//       {
+//         photo_id: photoId,
+//         access_token: ACCESS_TOKEN,
+//       }
+//     );
+
+//     console.log("Facebook story posted successfully!", data);
+//   } catch (error) {
+//     console.error(
+//       "Error posting story to Facebook:",
+//       error.response ? error.response.data : error.message
+//     );
+//   }
+// };
+
+
+// const postSmallImageWithPadding = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+//   try {
+//     // 1. Download image
+//     const response = await axios.get(PHOTO_URL, { responseType: 'arraybuffer' });
+//     const imageBuffer = Buffer.from(response.data);
+
+//     const paddedImage = await sharp(imageBuffer)
+//       .resize(1080, 1080, { fit: 'inside', background: { r: 40, g: 40, b: 40 } })
+//       .toBuffer();
+   
+//     const finalImage = await sharp({
+//   create: {
+//     width: 1080, 
+//     height: 1920,
+//     channels: 4,
+//     background: { r: 255, g: 255, b: 255, alpha: 0.2 }
+//   }
+// })
+//   .blur(20)
+//   .composite([{ input: paddedImage, gravity: 'center' }])
+//   .jpeg()
+//   .toBuffer(); 
+
+
+//     // 3. Upload
+//     const form = new FormData();
+//     form.append('source', finalImage, { filename: 'fb-story.jpg' });
+//     form.append('published', 'false');
+//     form.append('access_token', ACCESS_TOKEN);
+
+//     const uploadResponse = await axios.post(
+//       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
+//       form,
+//       { headers: { ...form.getHeaders() } }
+//     );
+ 
+//     // 4. Post story
+//     await axios.post(
+//       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
+//       { photo_id: uploadResponse.data.id, access_token: ACCESS_TOKEN }
+//     );
+
+//     console.log("Large image posted as Story!");
+//   } catch (error) {
+//     console.error("Error:", error.response?.data || error.message);
+//   }
+// };
+
+// const postSmallImageWithPadding = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+//   try {
+//     const response = await axios.get(PHOTO_URL, { responseType: 'arraybuffer' });
+//     const imageBuffer = Buffer.from(response.data);
+//     const metadata = await sharp(imageBuffer).metadata(); 
+//     const targetWidth = 1080;
+//     const targetHeight = 1920;
+    
+//     const paddedImage = await sharp(imageBuffer)
+//       .resize({
+//         width: targetWidth,
+//         height: targetHeight,
+//         fit: 'contain',
+//         background: { r: 40, g: 40, b: 40 } 
+//       })
+//       .toBuffer();
+
+//     let dominantColor = { r: 255, g: 255, b: 255 }; 
+//     try { 
+//       const image = {
+//         inlineData: {
+//           data: paddedImage.toString("base64"),
+//           mimeType: 'image/jpeg',
+//         },
+//       }; 
+      
+//       const prompt = "Analyze this image and tell me the single most dominant RGB color in the format {r: number, g: number, b: number}. Only respond with the format I specified, nothing else.";
+      
+//       const result = await model.generateContent([prompt, image]);
+//       const responseText = result.response.text().trim(); 
+      
+//       if (responseText.startsWith('{') && responseText.endsWith('}')) {
+//         dominantColor = eval(`(${responseText})`);
+//       }
+//     } catch (aiError) { 
+//       dominantColor = { r: 255, g: 255, b: 255 };
+//     }
+
+//     const finalImage = await sharp({ 
+//       create: {
+//         width: targetWidth, 
+//         height: targetHeight,
+//         channels: 4,
+//         background: { ...dominantColor, alpha: 0.2 }
+//       }
+//     })
+//     .blur(20)
+//     .composite([{ input: paddedImage, gravity: 'center' }])
+//     .jpeg()
+//     .toBuffer();
+
+//     const form = new FormData();
+//     form.append('source', finalImage, { filename: 'fb-story.jpg' });
+//     form.append('published', 'false');
+//     form.append('access_token', ACCESS_TOKEN);
+
+//     const uploadResponse = await axios.post(
+//       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
+//       form,
+//       { headers: { ...form.getHeaders() } }
+//     );
+ 
+//     await axios.post(
+//       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
+//       { photo_id: uploadResponse.data.id, access_token: ACCESS_TOKEN }
+//     );
+
+//   } catch (error) {
+//     console.error("Error:", error.response?.data || error.message);
+//   }
+// };
+// const postSmallImageWithPadding = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
+//   try {
+//     const response = await axios.get(PHOTO_URL, { responseType: 'arraybuffer' });
+//     const imageBuffer = Buffer.from(response.data);
+//     const targetWidth = 1080; 
+//     const targetHeight = 1920; 
+
+//     const processedImage = await sharp(imageBuffer)
+//       .resize({
+//         width: targetWidth,
+//         height: targetHeight,
+//         fit: 'cover',
+//         position: 'center'
+//       })
+//       .jpeg()
+//       .toBuffer();
+
+//     const form = new FormData();
+//     form.append('source', processedImage, { filename: 'fb-story.jpg' });
+//     form.append('published', 'false');
+//     form.append('access_token', ACCESS_TOKEN);
+
+//     const uploadResponse = await axios.post(
+//       `https://graph.facebook.com/v19.0/${Fb_ID}/photos`,
+//       form,
+//       { headers: { ...form.getHeaders() } }
+//     ); 
+
+//     await axios.post(
+//       `https://graph.facebook.com/v20.0/${Fb_ID}/photo_stories`,
+//       { photo_id: uploadResponse.data.id, access_token: ACCESS_TOKEN }
+//     );
+
+//   } catch (error) {
+//     console.error("Error:", error.response?.data || error.message);
+//   }
+// };
+
+
+
+// Function to lighten a color
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const postVideoStoryToFacebook = async (Fb_ID, ACCESS_TOKEN, PHOTO_URL) => {
   try {
@@ -507,17 +929,18 @@ async function schedulePosts() {
       // Skip if post is not upcoming
       if (isUpcoming === false) return;
 
-      const delay = unixtime * 1000 - Date.now(); 
-      if (delay > 0) {
-        const timerId = setTimeout(() => {
-          if (platforms.includes("facebook-story-image")) {
-            console.log("FB story");
-            postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
-          }
-          if (platforms.includes("facebook-Feed-image")) {
-            console.log("FB post");
-            postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message);
-          }
+      const delay = unixtime * 1000 - Date.now();  
+      if (delay > 0) { 
+        const timerId = setTimeout(() => { 
+          if (platforms.includes("facebook-story-image")) { 
+            console.log("FB story");  
+            // postToImageStoryFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+            postSmallImageWithPadding(Fb_ID, ACCESS_TOKEN, PHOTO_URL);
+          } 
+          if (platforms.includes("facebook-Feed-image")) { 
+            console.log("FB post");  
+            postToImageFeedFacebook(Fb_ID, ACCESS_TOKEN, PHOTO_URL, message); 
+          } 
           if (platforms.includes("facebook-Feed-video")) {
             console.log("FB video post");
             postToFacebookReels(Fb_ID, ACCESS_TOKEN, PHOTO_URL,message);
