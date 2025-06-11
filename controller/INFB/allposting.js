@@ -574,7 +574,7 @@ const postToImageFeedInstagram = async (
 
 // instgram reel
 
-const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
+const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL,message) => {
   try {
     console.log("Starting Instagram reel upload");
 
@@ -582,11 +582,12 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     const mediaResponse = await axios.post(
       `https://graph.facebook.com/v20.0/${Inst_ID}/media`,
       null,
-      {
+      { 
         params: {
           media_type: "REELS",
           video_url: PHOTO_URL,
           access_token: ACCESS_TOKEN,
+          caption:  message
         },
       }
     );
@@ -609,7 +610,7 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
       }
     );
 
-    console.log("Instagram reel posted successfully!", publishResponse.data);
+    console.log("Instagram reel posted successfully!");
   } catch (error) {
     console.error(
       "Error posting reel to Instagram:",
@@ -617,6 +618,8 @@ const postReelToInstagram = async (Inst_ID, ACCESS_TOKEN, PHOTO_URL) => {
     );
   }
 };
+
+
 const activeTimers = new Map();
 
 async function schedulePosts() {
@@ -679,7 +682,7 @@ async function schedulePosts() {
             postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
           }
           if (platforms.includes("instagram-Feed-video")) {
-            postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+            postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL,message);
           }
 
           // Remove the timer from activeTimers after execution
