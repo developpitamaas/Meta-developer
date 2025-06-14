@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const postToVideoStoryFacebook = async (Fb_ID, ACCESS_TOKEN, VIDEO_URL) => {
   try {
-    console.log("Starting video upload process to Facebook Reels");
+    console.log("Starting video upload process to Facebook Reels");    
 
     // Step 1: Start the upload session (ensure you're passing correct parameters)
     const sessionInitResponse = await axios.post(
