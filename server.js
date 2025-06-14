@@ -167,6 +167,5 @@ app.use("/api", Story, AI, uploadRoutes);
 
 const PORT = process.env.PORT || 5003;
 app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-    console.log(`Database URL: ${process.env.TEST}`);
+    console.log(`vaibhav Server started on port ${PORT}`);
 });

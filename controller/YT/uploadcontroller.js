@@ -756,12 +756,12 @@ exports.uploadVideo = async (req, res) => {
       details: error.response?.data,
       solution: error.message.includes('refresh token') 
         ? 'Please reauthenticate to get a new refresh token' 
-        : 'Check your request parameters and try again'
+        : 'Check your request parameters and try again --vaibhav '
     });
   } finally {
     // Clean up temporary file if we downloaded it
     if (shouldCleanup && localFilePath && fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
-  }
+  }  
 };
