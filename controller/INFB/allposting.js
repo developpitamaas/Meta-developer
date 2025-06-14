@@ -665,10 +665,10 @@ async function schedulePosts() {
           }
 
           // Instagram
-          if (platforms.includes("instagram-story-image")) {
-            console.log("Insta story");
-            postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-          }
+          // if (platforms.includes("instagram-story-image")) {
+          //   console.log("Insta story");
+          //   postToImageStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+          // }
           if (platforms.includes("instagram-Feed-image")) {
             console.log("Insta post");
             postToImageFeedInstagram(
