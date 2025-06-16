@@ -497,7 +497,7 @@ const ACCOUNTS = {
   }, 
   account2: {
     CLIENT_ID: process.env.ACC2CLIENT_ID,
-    CLIENT_SECRET: process.env.ACC2CLIENT_SECRET,
+    CLIENT_SECRET: process.env.ACC2CLIENT_SECRET,   
     REDIRECT_URI: 'https://meta.ritaz.in/api/callback/account2'
   },
   account3: {
