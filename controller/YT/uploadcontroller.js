@@ -503,12 +503,12 @@ const ACCOUNTS = {
   account3: {
     CLIENT_ID: process.env.ACC3CLIENT_ID,
     CLIENT_SECRET: process.env.ACC3CLIENT_SECRET,
-    REDIRECT_URI: 'http://localhost:5003/api/callback/account3'
+    REDIRECT_URI: 'https://meta.ritaz.in/api/callback/account3'
   },
   account4: {
     CLIENT_ID: process.env.ACC4CLIENT_ID,
     CLIENT_SECRET: process.env.ACC4CLIENT_SECRET,
-    REDIRECT_URI: 'http://localhost:5003/api/callback/account4'
+    REDIRECT_URI: 'https://meta.ritaz.in/api/callback/account4'
   }
 };
 
