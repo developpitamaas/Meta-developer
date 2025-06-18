@@ -196,7 +196,7 @@ const postYouTubeVideo = async (req, res) => {
         scope: ['https://www.googleapis.com/auth/youtube.upload'],
         prompt: 'consent',
         state: JSON.stringify({
-          account : "account1",
+          account : account,
           redirectBack: req.body.redirectBack || null
         })
       });
