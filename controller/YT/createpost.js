@@ -248,6 +248,7 @@ const handleAuthCallback = async (req, res) => {
       CLIENT_SECRET,
       REDIRECT_URI
     );
+    console.log("REDIRECT_URI",REDIRECT_URI)
 
     const { tokens } = await oauth2Client.getToken(code);
     
