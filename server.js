@@ -125,6 +125,9 @@ const cors = require('cors');
 const AI = require("./routes/AI");
 const uploadRoutes = require('./routes/yt.js');
 const { schedulePosts } = require("./controller/INFB/allposting");
+const YT = require('./routes/ytshedule.js');
+const { scheduleYouTubePosts } = require("./controller/YT/ytuploader.js");
+
 
 const app = express();
 
@@ -158,12 +161,25 @@ setInterval(() => {
     });
 }, 60 * 60 * 1000);
 
+
+
+scheduleYouTubePosts().catch(err => {
+    console.error('Initial YouTube scheduling failed:', err);
+});
+
+setInterval(() => {
+    scheduleYouTubePosts().catch(err => {
+        console.error('Scheduled YouTube posting failed:', err);
+    });
+}, 60 * 60 * 1000);
+
+
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
 
-app.use("/api", Story, AI, uploadRoutes);
+app.use("/api", Story, AI, uploadRoutes,YT);
 
 const PORT = process.env.PORT || 5003;
 app.listen(PORT, () => {
