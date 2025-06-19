@@ -325,6 +325,8 @@ const pipeline = util.promisify(stream.pipeline);
 
 
 // Account Configuration
+    console.log("handleAuthCallback--vaibhav")
+
 const ACCOUNTS = {  
   account1: {
     CLIENT_ID: process.env.ACC1CLIENT_ID,
@@ -364,6 +366,8 @@ const TEMP_DIR = path.join(__dirname, '../temp');
 });
 
 function getOAuthClient(accountId , CLIENT_ID , REDIRECT_URI , CLIENT_SECRET) {
+    console.log("handleAuthCallback--cahvi")
+
   const account = ACCOUNTS[accountId];
   if (!account) {
     throw new Error(`Account ${accountId} not configured`);

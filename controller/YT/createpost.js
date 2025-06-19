@@ -1,112 +1,14 @@
-// const YtPost = require('../../model/YT/ytvideo');
-// const { scheduleYouTubePosts } = require('./ytuploader.js');
-// const axios = require('axios');
-// const { google } = require('googleapis');
-
-// const postYouTubeVideo = async (req, res) => {
-//     try {
-//         // Validate required fields
-//         if (!req.body.videoUrl || !req.body.title || !req.body.description || 
-//             !req.body.CLIENT_ID || !req.body.CLIENT_SECRET || !req.body.REDIRECT_URI || 
-//             !req.body.unixtime) {
-//             return res.status(400).json({ message: "Missing required fields" });
-//         }
-
-//         // Check if we have valid tokens
-//         let authUrl = null;
-//         if (req.body.ACCESS_TOKEN) {
-//             try {
-//                 const oauth2Client = new google.auth.OAuth2(
-//                     req.body.CLIENT_ID,
-//                     req.body.CLIENT_SECRET,
-//                     req.body.REDIRECT_URI
-//                 );
-                
-//                 oauth2Client.setCredentials({
-//                     access_token: req.body.ACCESS_TOKEN,
-//                     refresh_token: req.body.REFRESH_TOKEN
-//                 });
-
-//                 // Test the token validity
-//                 const youtube = google.youtube({
-//                     version: "v3",
-//                     auth: oauth2Client
-//                 });
-
-//                 // Make a simple API call to check token validity
-//                 await youtube.channels.list({
-//                     part: 'snippet',
-//                     mine: true
-//                 });
-//             } catch (error) {
-//                 console.log('Token validation failed, generating new auth URL');
-//                 // Token is invalid or expired, generate new auth URL
-//                 const oauth2Client = new google.auth.OAuth2(
-//                     req.body.CLIENT_ID,
-//                     req.body.CLIENT_SECRET,
-//                     req.body.REDIRECT_URI
-//                 );
-                
-//                 authUrl = oauth2Client.generateAuthUrl({
-//                     access_type: 'offline',
-//                     scope: ['https://www.googleapis.com/auth/youtube.upload'],
-//                     prompt: 'consent',
-//                     state: JSON.stringify({
-//                         account: req.body.account || 'default',
-//                         redirectBack: req.body.redirectBack || null
-//                     })
-//                 });
-//             }
-//         } else {
-//             // No token provided, generate auth URL
-//             const oauth2Client = new google.auth.OAuth2(
-//                 req.body.CLIENT_ID,
-//                 req.body.CLIENT_SECRET,
-//                 req.body.REDIRECT_URI
-//             );
-            
-//             authUrl = oauth2Client.generateAuthUrl({
-//                 access_type: 'offline',
-//                 scope: ['https://www.googleapis.com/auth/youtube.upload'],
-//                 prompt: 'consent',
-//                 state: JSON.stringify({
-//                     account: req.body.account || 'default',
-//                     redirectBack: req.body.redirectBack || null
-//                 })
-//             });
-//         }
-
-//         const response = await YtPost.create(req.body);
-        
-//         console.log(`Created new YouTube video scheduled for ${new Date(parseInt(response.unixtime) * 1000)}`);
-        
-//         // Trigger the scheduler
-//         scheduleYouTubePosts();
-
-//         res.status(201).json({
-//             ...response._doc,
-//             isoTime: new Date(parseInt(response.unixtime) * 1000).toISOString(),
-//             isUpcoming: parseInt(response.unixtime) > Math.floor(Date.now() / 1000),
-//             ...(authUrl && { authorizationRequired: true, authUrl })
-//         });
-//     } catch (error) {
-//         console.error("Error creating YouTube post:", error);
-//         res.status(500).json({ message: error.message });
-//     }
-// }
-
-// module.exports = { postYouTubeVideo };
-
 const YtPost = require('../../model/YT/ytvideo');
 const { scheduleYouTubePosts } = require('./ytuploader.js');
 const axios = require('axios');
 const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
+const ACcount = require('../../model/YT/account');
 
 // Configuration
-const TOKENS_DIR = path.join(__dirname, '../../tokens');
-const TEMP_DIR = path.join(__dirname, '../../temp');
+const TOKENS_DIR = path.join(__dirname, '../tokens');
+const TEMP_DIR = path.join(__dirname, '../temp');
 
 // Ensure directories exist
 [TOKENS_DIR, TEMP_DIR].forEach(dir => {
@@ -232,23 +134,25 @@ const postYouTubeVideo = async (req, res) => {
   }
 }
 
-// Add these endpoints to handle the OAuth flow
 const handleAuthCallback = async (req, res) => {
   try {
-    const { account } = req.params;
-    const { code } = req.query;
-    const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = req.body;
-
-    if (!code || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
-      return res.status(400).json({ message: "Missing required parameters" });
+    const { accountId } = req.params;
+    
+    const Findaccount = await ACcount.findOne({accountname: accountId});
+    
+    if (!Findaccount) {
+      return res.status(404).json({ message: "Account not found" });
     }
 
-    const oauth2Client = new google.auth.OAuth2(
-      CLIENT_ID,
-      CLIENT_SECRET,
-      REDIRECT_URI
-    );
-    console.log("REDIRECT_URI",REDIRECT_URI)
+    const account = Findaccount.account;
+    const { code } = req.query;
+
+    const oauth2Client = new google.auth.OAuth2({
+      clientId: Findaccount.CLIENT_ID,
+      clientSecret: Findaccount.CLIENT_SECRET,
+      // redirectUri: `http://localhost:5003/api/callback/${Findaccount.accountname}`
+      redirectUri : `https://meta.ritaz.in/api/callback/${Findaccount.accountname}`
+    });
 
     const { tokens } = await oauth2Client.getToken(code);
     
@@ -257,13 +161,13 @@ const handleAuthCallback = async (req, res) => {
     }
 
     // Store the tokens
-    const tokenPath = getTokenPath(account);
+    const tokenPath = getTokenPath(Findaccount.accountname);
     fs.writeFileSync(tokenPath, JSON.stringify(tokens));
 
     res.json({ 
       success: true,
       message: 'Authentication successful',
-      account
+      acc : Findaccount.accountname
     });
   } catch (error) {
     console.error("Error handling auth callback:", error);

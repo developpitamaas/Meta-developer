@@ -8,7 +8,7 @@ const {
 
 // Authentication routes
 router.get('/auth/:accountId', getAuthUrl);
-router.get('/callback/:accountId', handleCallback);
+// router.get('/callback/:accountId', handleCallback);
 
 // Upload route
 router.post('/upload/:accountId', uploadVideo);
