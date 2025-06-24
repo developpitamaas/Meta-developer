@@ -141,8 +141,6 @@
 
 // module.exports = { scheduleYouTubePosts };
 
-
-
 const YtPost = require('../../model/YT/ytvideo');
 const { google } = require('googleapis');
 const axios = require('axios');
@@ -150,10 +148,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const TOKENS_DIR = path.join(__dirname, '../tokens');
-const TEMP_DIR = path.join(__dirname, '../temp');
+const TOKENS_DIR = path.join(__dirname, '../../tokens');
+const TEMP_DIR = path.join(__dirname, '../../temp');
 const activeYouTubeTimers = new Map();
-const TOKEN_EXPIRY_BUFFER = 300000; 
+const TOKEN_EXPIRY_BUFFER = 300000; // 5 minutes buffer for token expiry
 
 // Ensure directories exist
 [TOKENS_DIR, TEMP_DIR].forEach(dir => {
@@ -264,7 +262,7 @@ async function uploadYouTubeVideo(post) {
         },
         status: {
           privacyStatus: post.privacyStatus || "public",
-          // publishAt: new Date(parseInt(post.unixtime) * 1000).toISOString(),
+          publishAt: new Date(parseInt(post.unixtime) * 1000).toISOString(),
         },
       },
       media: {
@@ -300,74 +298,6 @@ async function uploadYouTubeVideo(post) {
   }
 }
 
-// async function scheduleYouTubePosts() {
-//   try {
-//     // Clear any existing timers
-//     clearAllScheduledYouTubePosts();
-
-//     // Get all posts with future unixtime (within next 30 days)
-//     const now = Math.floor(Date.now() / 1000);
-//     const futureLimit = now + (30 * 24 * 60 * 60); // 30 days in future
-    
-//     const posts = await YtPost.find({
-//       unixtime: { 
-//         $gte: now.toString(), 
-//         $lte: futureLimit.toString() 
-//       },
-//     }).sort({ unixtime: 1 }); // Sort by earliest first
-
-//     console.log(`Found ${posts.length} posts to schedule`);
- 
-//     for (const post of posts) { 
-//       try {
-//         // Get tokens from local storage
-//         const tokens = await getOrRefreshToken(post.account, post.CLIENT_ID, post.CLIENT_SECRET, post.REDIRECT_URI);
-//         console.log(`Tokens for account ${post.account}:`, tokens);
-//         if (!tokens) {
-//           console.log(`No valid token found for account ${post.account}`);
-//           post.status = "needs_authorization";
-//           await post.save();
-//           continue;
-//         }
-
-//         // Calculate delay until scheduled time
-//         const scheduledTime = parseInt(post.unixtime) * 1000;
-//         const delay = scheduledTime - Date.now();
-
-//         if (delay > 0) {
-//           console.log(`Scheduling post ${post._id} for ${new Date(scheduledTime)}`);
-          
-//           const timerId = setTimeout(async () => {
-//             try {
-//               console.log(`Processing scheduled post ${post._id}`);
-//               await uploadYouTubeVideo(post);
-//             } catch (error) {
-//               console.error(`Failed to upload YouTube video ${post._id}:`, error);
-//             } finally {
-//               activeYouTubeTimers.delete(post._id);
-//             }
-//           }, delay);
-
-//           activeYouTubeTimers.set(post._id, timerId);
-//           post.status = "scheduled";
-//           await post.save();
-//         } else {
-//           console.log(`Post ${post._id} scheduled time has passed (${new Date(scheduledTime)}), attempting immediate upload`);
-//           try {
-//             await uploadYouTubeVideo(post);
-//           } catch (error) {
-//             console.error(`Failed to upload delayed post ${post._id}:`, error);
-//           }
-//         }
-//       } catch (error) {
-//         console.error(`Error processing post ${post._id}:`, error);
-//       }
-//     }
-//   } catch (error) {
-//     console.error("Error in scheduleYouTubePosts:", error);
-//   }
-// }
-
 async function scheduleYouTubePosts() {
   try {
     // Clear any existing timers
@@ -388,19 +318,15 @@ async function scheduleYouTubePosts() {
  
     for (const post of posts) { 
       try {
-        const tokenPath = getTokenPath(post.account);
-        
-        // Check if token exists
-        if (!fs.existsSync(tokenPath)) {
-          console.log(`No token found for account ${post.account}`);
+        // Get tokens from local storage
+        const tokens = await getOrRefreshToken(post.account, post.CLIENT_ID, post.CLIENT_SECRET, post.REDIRECT_URI);
+        console.log(`Tokens for account ${post.account}:`, tokens);
+        if (!tokens) {
+          console.log(`No valid token found for account ${post.account}`);
           post.status = "needs_authorization";
           await post.save();
           continue;
         }
-
-        // Read token from file
-        const tokens = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
-        console.log(`Using token for account ${post.account}`);
 
         // Calculate delay until scheduled time
         const scheduledTime = parseInt(post.unixtime) * 1000;
@@ -424,12 +350,12 @@ async function scheduleYouTubePosts() {
           post.status = "scheduled";
           await post.save();
         } else {
-          console.log(`Post ${post._id} scheduled time has passed, attempting immediate upload`);
+          console.log(`Post ${post._id} scheduled time has passed (${new Date(scheduledTime)}), attempting immediate upload`);
           try {
             await uploadYouTubeVideo(post);
           } catch (error) {
             console.error(`Failed to upload delayed post ${post._id}:`, error);
-          } 
+          }
         }
       } catch (error) {
         console.error(`Error processing post ${post._id}:`, error);
@@ -439,8 +365,6 @@ async function scheduleYouTubePosts() {
     console.error("Error in scheduleYouTubePosts:", error);
   }
 }
-
-
 
 function clearAllScheduledYouTubePosts() {
   for (const [_, timerId] of activeYouTubeTimers) {

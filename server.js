@@ -175,13 +175,13 @@ setInterval(() => {
 
 
 app.use((err, req, res, next) => {
-    console.error('Server error:', err);
+    console.error('Server error:', err); 
     res.status(500).json({ error: 'Internal server error' });
 });
 
 app.use("/api", Story, AI, uploadRoutes,YT);
 
-const PORT = process.env.PORT || 5003;
+const PORT = 5003;
 app.listen(PORT, () => {
     console.log(`vaibhav Server started on port ${PORT}`);
 });
