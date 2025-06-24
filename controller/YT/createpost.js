@@ -613,7 +613,8 @@ const handleAuthCallback = async (req, res) => {
       account.CLIENT_ID,
       account.CLIENT_SECRET,
       // account.REDIRECT_URI
-    `http://localhost:5003/api/callback/${account.accountname}`,
+      `https://meta.ritaz.in/api/callback/${account.accountname}`
+    // `http://localhost:5003/api/callback/${account.accountname}`,
 
     );
 
@@ -625,7 +626,8 @@ const handleAuthCallback = async (req, res) => {
       clientId: account.CLIENT_ID,
       clientSecret: account.CLIENT_SECRET,
       // redirectUri: account.REDIRECT_URI,
-      redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
+      // redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
+      redirectUri:  `https://meta.ritaz.in/api/callback/${account.accountname}`,
       accountId: account.accountname 
     };
     
