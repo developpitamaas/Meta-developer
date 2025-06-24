@@ -19,6 +19,12 @@ const postSchema = new mongoose.Schema({
     },
     refreshToken: {
         type: String
+    },
+    accessToken: {
+        type: String
+    },
+    tokenExpiry: {
+        type: Date
     }
 });
 

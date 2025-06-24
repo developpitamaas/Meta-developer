@@ -5,7 +5,7 @@
 // const dotenv = require("dotenv");
 // const Story = require("./routes/facebook/stroy");
 // const connectDb = require("./config/database");
-// const cors = require('cors');
+// const cors = require('cors'); 
 // const AI = require("./routes/AI");
 // const uploadRoutes = require('./routes/yt.js');
 
