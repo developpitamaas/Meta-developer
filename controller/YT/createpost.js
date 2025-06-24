@@ -620,9 +620,8 @@ const handleAuthCallback = async (req, res) => {
     const oauth2Client = new google.auth.OAuth2(
       account.CLIENT_ID,
       account.CLIENT_SECRET,
-      // account.REDIRECT_URI
-      // `https://meta.ritaz.in/api/callback/${account.accountname}`
-    `http://localhost:5003/api/callback/${account.accountname}`,
+      account.REDIRECT_URI
+    // `http://localhost:5003/api/callback/${account.accountname}`,
 
     );
 
@@ -633,9 +632,8 @@ const handleAuthCallback = async (req, res) => {
       ...tokens,
       clientId: account.CLIENT_ID,
       clientSecret: account.CLIENT_SECRET,
-      // redirectUri: account.REDIRECT_URI,
-      redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
-      // redirectUri:  `https://meta.ritaz.in/api/callback/${account.accountname}`,
+      redirectUri: account.REDIRECT_URI,
+      // redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
       accountId: account.accountname 
     };
     
