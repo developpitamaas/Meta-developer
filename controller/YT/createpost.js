@@ -551,7 +551,15 @@ const postYouTubeVideo = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const { account, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = req.body;
+    const { account } = req.body;
+    // const { account, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = req.body;
+
+    const accountData = await ACcount.findOne({ accountname: account });
+    const CLIENT_ID = accountData.CLIENT_ID;
+    const CLIENT_SECRET = accountData.CLIENT_SECRET;
+    // const REDIRECT_URI = "http://localhost:5003/api/callback/chavi";
+    const REDIRECT_URI = accountData.REDIRECT_URI;
+
     let authUrl = null;
 
     // Check for existing valid token
@@ -613,8 +621,8 @@ const handleAuthCallback = async (req, res) => {
       account.CLIENT_ID,
       account.CLIENT_SECRET,
       // account.REDIRECT_URI
-      `https://meta.ritaz.in/api/callback/${account.accountname}`
-    // `http://localhost:5003/api/callback/${account.accountname}`,
+      // `https://meta.ritaz.in/api/callback/${account.accountname}`
+    `http://localhost:5003/api/callback/${account.accountname}`,
 
     );
 
@@ -626,8 +634,8 @@ const handleAuthCallback = async (req, res) => {
       clientId: account.CLIENT_ID,
       clientSecret: account.CLIENT_SECRET,
       // redirectUri: account.REDIRECT_URI,
-      // redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
-      redirectUri:  `https://meta.ritaz.in/api/callback/${account.accountname}`,
+      redirectUri:  `http://localhost:5003/api/callback/${account.accountname}`,
+      // redirectUri:  `https://meta.ritaz.in/api/callback/${account.accountname}`,
       accountId: account.accountname 
     };
     
