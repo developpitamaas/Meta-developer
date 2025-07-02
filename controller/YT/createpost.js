@@ -545,8 +545,7 @@ async function getOrRefreshToken(accountId) {
 const postYouTubeVideo = async (req, res) => {
   try {
     // Validate required fields
-    if (!req.body.videoUrl || !req.body.title || !req.body.description || 
-        !req.body.CLIENT_ID || !req.body.CLIENT_SECRET || !req.body.REDIRECT_URI || 
+    if (!req.body.videoUrl || !req.body.title || !req.body.description  || 
         !req.body.unixtime || !req.body.account) {
       return res.status(400).json({ message: "Missing required fields" });
     }

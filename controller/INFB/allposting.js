@@ -678,9 +678,9 @@ async function schedulePosts() {
               message
             );
           }
-          if (platforms.includes("instagram-story-video")) {
-            postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
-          }
+          // if (platforms.includes("instagram-story-video")) {
+          //   postToVideoStoryInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL);
+          // }
           if (platforms.includes("instagram-Feed-video")) {
             postReelToInstagram(Inst_ID, ACCESS_TOKEN, PHOTO_URL,message);
           }
